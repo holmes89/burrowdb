@@ -158,7 +158,7 @@ func (l *Lexer) str(r rune) *Token {
 
 // endToken guarantees that the following rune separates this token from the next.
 func (l *Lexer) endToken() {
-	if r := l.Peek(); isAlphanum(r) || !isSpace(r) && r != '(' && r != ')' && r != '{' && r != '}' && r != '"' && r != EofRune {
+	if r := l.Peek(); isAlphanum(r) || !isSpace(r) && r != '(' && r != ')' && r != '{' && r != '}' && r != ':' && r != EofRune {
 		errorf("invalid token after %s", l.String())
 	}
 }

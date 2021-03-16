@@ -24,15 +24,14 @@ func main() {
 
 		line = scanner.Text()
 
-		p := lib.NewLexer(strings.NewReader(line))
+		p := lib.NewParser(lib.NewLexer(strings.NewReader(line)))
 
-		for {
-			n := p.NextToken()
-			if n == nil || n.IsEOF() {
-				break
-			}
-			fmt.Printf("%+v\n", n)
+		exp, err := p.Parse()
+		if err != nil {
+			fmt.Fprintln(out, err.Error())
 		}
+
+		fmt.Fprintf(out, "%+v\n", exp)
 	}
 }
 
