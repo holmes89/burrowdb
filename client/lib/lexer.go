@@ -45,6 +45,50 @@ func (l *Lexer) IsNextRParen() bool {
 	return tok == ')'
 }
 
+func (l *Lexer) IsNextColon() bool {
+	tok := l.Peek()
+	if isSpace(tok) {
+		l.Next()
+		return l.IsNextColon()
+	}
+	return tok == ':'
+}
+
+func (l *Lexer) IsNextRBrace() bool {
+	tok := l.Peek()
+	if isSpace(tok) {
+		l.Next()
+		return l.IsNextRBrace()
+	}
+	return tok == '}'
+}
+
+func (l *Lexer) IsNextLBrace() bool {
+	tok := l.Peek()
+	if isSpace(tok) {
+		l.Next()
+		return l.IsNextRBrace()
+	}
+	return tok == '{'
+}
+
+func (l *Lexer) ReadUntilRParen() []byte {
+	var rs []rune
+	for {
+		tok := l.Peek()
+		if isSpace(tok) {
+			l.Next()
+			continue
+		}
+		if tok == ')' {
+			break
+		}
+		tok = l.Next()
+		rs = append(rs, tok)
+	}
+	return []byte(string(rs))
+}
+
 func (l *Lexer) NextToken() *Token {
 	for {
 		r := l.Next()

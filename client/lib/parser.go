@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -21,7 +22,7 @@ type Expr struct {
 }
 
 func (e *Expr) String() string {
-	return fmt.Sprintf("Command: %s, Node: {id: %s, label: %s}", e.Command, e.Node.ID, e.Node.Label)
+	return fmt.Sprintf("Command: %s, Node: {id: %s, label: %+v, properties: %+v}", e.Command, e.Node.ID, e.Node.Labels, e.Node.Properties)
 }
 
 var ErrEndOfInputStream = errors.New("end of input stream")
@@ -67,28 +68,81 @@ func (p *Parser) parseCreate() (*Expr, error) {
 
 	exp.Node.ID = token.text
 
-	// next can be rparen or label or properties
-	for {
-		token = p.lex.NextToken()
-		switch token.typ {
-		case tokenRpar:
-			return exp, nil
-		case tokenColon:
-			l, err := p.parseLabel()
-			if err != nil {
-				return nil, err
-			}
-			exp.Node.Label = l
-		default:
-			return nil, errors.New("invalid syntax")
+	token = p.lex.NextToken()
+	switch token.typ {
+	case tokenRpar:
+		return exp, nil
+	case tokenColon:
+		l, err := p.parseLabels()
+		if err != nil {
+			return nil, err
 		}
+		exp.Node.Labels = l
+	case tokenLbrace:
+		o, err := p.parseProperties()
+		if err != nil {
+			return nil, err
+		}
+		exp.Node.Properties = o
+	default:
+		return nil, errors.New("invalid syntax")
 	}
+
+	token = p.lex.NextToken()
+	switch token.typ {
+	case tokenRpar:
+		return exp, nil
+	case tokenLbrace:
+		o, err := p.parseProperties()
+		if err != nil {
+			return nil, err
+		}
+		exp.Node.Properties = o
+	default:
+		return nil, errors.New("invalid syntax")
+	}
+
+	token = p.lex.NextToken()
+	if token.typ != tokenRpar {
+		return nil, errors.New("invalid syntax")
+	}
+
+	return exp, nil
 }
 
-func (p *Parser) parseLabel() (burrowdb.Label, error) {
+func (p *Parser) parseLabels() (labels []burrowdb.Label, err error) {
 	token := p.lex.NextToken()
 	if token.typ != tokenString {
-		return "", errors.New("invalid syntax label must be string")
+		return nil, errors.New("invalid syntax label must be string")
 	}
-	return (burrowdb.Label)(token.text), nil
+	labels = append(labels, (burrowdb.Label)(token.text))
+
+	for {
+		if p.lex.IsNextRParen() || p.lex.IsNextLBrace() {
+			break
+		}
+		token := p.lex.NextToken()
+
+		if token.typ != tokenColon {
+			return nil, errors.New("invalid syntax label must start with a colon")
+		}
+
+		token = p.lex.NextToken()
+		if token.typ != tokenString {
+			return nil, errors.New("invalid syntax label must be string")
+		}
+		labels = append(labels, (burrowdb.Label)(token.text))
+
+	}
+
+	return labels, nil
+}
+
+func (p *Parser) parseProperties() (m map[string]interface{}, err error) {
+	b := p.lex.ReadUntilRParen()
+	b = append([]byte{'{'}, b...)
+	if err := json.Unmarshal(b, &m); err != nil {
+		return m, errors.New("invalid syntax for properties")
+	}
+	return m, nil
 }

@@ -4,7 +4,7 @@ type propertyKey string
 
 type Node struct {
 	ID         string
-	Label      Label
+	Labels     []Label
 	Properties map[string]interface{}
 }
 
