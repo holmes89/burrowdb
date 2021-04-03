@@ -43,9 +43,30 @@ func (p *Parser) handleConst(token *Token) (*Expr, error) {
 	switch token {
 	case tokenCreate:
 		return p.parseCreate()
+	case tokenMatch:
+		return p.parseMatch()
 	default:
 		return nil, errors.New("invalid command")
 	}
+}
+
+func (p *Parser) parseMatch() (*Expr, error) {
+
+	exp := &Expr{
+		Command: "MATCH",
+	}
+
+	if t := p.lex.NextToken().typ; t != tokenLpar {
+		return nil, errors.New("invalid syntax")
+	}
+
+	// First token is a variable to use
+	token := p.lex.NextToken()
+	if token.typ != tokenString {
+		return nil, errors.New("invalid syntax")
+	}
+
+	return exp, nil
 }
 
 func (p *Parser) parseCreate() (*Expr, error) {
@@ -54,8 +75,6 @@ func (p *Parser) parseCreate() (*Expr, error) {
 		Command: "CREATE",
 	}
 
-	// TODO multinode creation
-	// TODO multilabel
 	if t := p.lex.NextToken().typ; t != tokenLpar {
 		return nil, errors.New("invalid syntax")
 	}

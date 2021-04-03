@@ -3,13 +3,24 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
+	"github.com/boltdb/bolt"
 	"github.com/holmes89/burrowdb/client/lib"
+	"github.com/holmes89/burrowdb/node"
 )
 
 func main() {
+	// replaced with connection
+	db, err := bolt.Open("example.db", 0600, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	eval := lib.NewEvaluator(node.NewNodeRepo(db))
+	defer db.Close()
+
 	scanner := bufio.NewScanner(os.Stdin)
 	out := os.Stdout
 	var line string
@@ -31,7 +42,12 @@ func main() {
 			fmt.Fprintln(out, err.Error())
 		}
 
-		fmt.Fprintf(out, "%+v\n", exp)
+		if err := eval.Eval(exp); err != nil {
+			fmt.Fprintln(out, err.Error())
+		} else {
+			fmt.Fprintln(out, "SUCCESS")
+		}
+
 	}
 }
 

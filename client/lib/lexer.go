@@ -221,4 +221,5 @@ func errorf(format string, args ...interface{}) {
 
 var (
 	tokenCreate = mkToken(tokenConst, "create")
+	tokenMatch  = mkToken(tokenConst, "match")
 )
