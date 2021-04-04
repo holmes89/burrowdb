@@ -7,19 +7,19 @@ import (
 )
 
 type Evaluator struct {
-	creator burrowdb.NodeCreator
+	repo *burrowdb.Repository
 }
 
-func NewEvaluator(creator burrowdb.NodeCreator) *Evaluator {
+func NewEvaluator(repo *burrowdb.Repository) *Evaluator {
 	return &Evaluator{
-		creator: creator,
+		repo: repo,
 	}
 }
 
 func (e *Evaluator) Eval(ex *Expr) error {
 	switch ex.Command {
 	case "CREATE":
-		return e.creator.Create(&ex.Node)
+		return e.repo.Create(&ex.Node)
 	default:
 		return errors.New("invalid command")
 	}

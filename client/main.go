@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/boltdb/bolt"
+	"github.com/holmes89/burrowdb"
 	"github.com/holmes89/burrowdb/client/lib"
-	"github.com/holmes89/burrowdb/node"
 )
 
 func main() {
@@ -18,7 +18,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	eval := lib.NewEvaluator(node.NewNodeRepo(db))
+	repo := burrowdb.NewRepository(db)
+	eval := lib.NewEvaluator(repo)
 	defer db.Close()
 
 	scanner := bufio.NewScanner(os.Stdin)
